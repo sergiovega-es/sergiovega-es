@@ -1,0 +1,9 @@
+# Dominio antiguo -> dominio nuevo (MSM)
+http://sergiovega.es/*            https://sergiovega.eu/:splat            301!
+https://sergiovega.es/*           https://sergiovega.eu/:splat            301!
+http://www.sergiovega.es/*        https://sergiovega.eu/:splat            301!
+https://www.sergiovega.es/*       https://sergiovega.eu/:splat            301!
+http://en.sergiovega.es/*         https://en.sergiovega.eu/:splat         301!
+https://en.sergiovega.es/*        https://en.sergiovega.eu/:splat         301!
+http://formacion.sergiovega.es/*  https://formacion.sergiovega.eu/:splat  301!
+https://formacion.sergiovega.es/* https://formacion.sergiovega.eu/:splat  301!
