@@ -626,5 +626,95 @@
   })();
 </script>
 
+<!-- SV-FALLBACK-FORM (Fable, 02/11/2026) -->
+<!-- Si el formulario de MailerLite no aparece (bloqueadores, protección de rastreo,
+     navegador interno de Facebook), mostramos uno propio que envía al MISMO formulario
+     de MailerLite (mismo grupo y automatización). Si ese envío también falla,
+     ofrecemos WhatsApp o email. Si el de MailerLite aparece tarde, quitamos el nuestro. -->
+<style>
+  .sv-fb { width: 100%; }
+  .sv-fb form { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+  .sv-fb button {
+    width: 100%; padding: 15px 16px; border: 0; border-radius: 4px;
+    background: #111; color: #fff; font-size: 16px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .sv-fb button[disabled] { opacity: .6; cursor: default; }
+  .sv-fb .sv-fb-note { font-size: 13px; color: #666; margin: 4px 0 0; line-height: 1.5; }
+  .sv-fb .sv-fb-msg { font-size: 15px; line-height: 1.5; margin: 6px 0 0; }
+  .sv-fb .sv-fb-msg.ok { color: #1a7f37; font-weight: 600; }
+  .sv-fb .sv-fb-msg.err { color: #b42318; }
+  .sv-fb a { color: #E8501E; font-weight: 600; }
+</style>
+<script>
+(function(){
+  try {
+    var URL = 'https://assets.mailerlite.com/jsonp/2452730/forms/200302874175997690/subscribe';
+    var WA = 'https://wa.me/34672907594?text=' + encodeURIComponent('Hi Sergio, please send me the guide.');
+    var MAIL = 'mailto:sergio@sergiovega.es?subject=' + encodeURIComponent('Please send me the guide');
+    var ALT = 'Or get it by <a href="' + WA + '" target="_blank" rel="noopener">WhatsApp</a> or <a href="' + MAIL + '">email</a>.';
+
+    function sig(name, extra){ try { if (typeof fbq === 'function') fbq('trackCustom', name, extra || {}); } catch(e){} }
+    function lead(){ try { if (typeof fbq === 'function') fbq('track', 'Lead'); } catch(e){} }
+
+    function build(box){
+      var w = document.createElement('div');
+      w.className = 'sv-fb';
+      w.innerHTML =
+        '<form novalidate>' +
+          '<input type="email" name="sv-email" placeholder="Email" autocomplete="email" inputmode="email" required>' +
+          '<button type="submit">Send me the guide</button>' +
+          '<p class="sv-fb-note">You\'ll get the guide and occasional tips. Unsubscribe anytime. <a href="/privacy">Privacy policy</a>. ' + ALT + '</p>' +
+          '<p class="sv-fb-msg" aria-live="polite"></p>' +
+        '</form>';
+      var f = w.querySelector('form'), inp = w.querySelector('input'), btn = w.querySelector('button'), msg = w.querySelector('.sv-fb-msg');
+      f.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        var v = (inp.value || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { msg.className = 'sv-fb-msg err'; msg.textContent = 'Please check the email address.'; return; }
+        btn.disabled = true; btn.textContent = 'Sending...'; msg.textContent = '';
+        var body = new URLSearchParams();
+        body.append('fields[email]', v); body.append('ml-submit', '1'); body.append('anticsrf', 'true');
+        fetch(URL, { method: 'POST', body: body, headers: { 'Accept': 'application/json' } })
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            if (j && j.success) {
+              f.querySelector('input').style.display = 'none'; btn.style.display = 'none';
+              msg.className = 'sv-fb-msg ok';
+              msg.textContent = 'Done. The guide is on its way: check your inbox in a minute (and the spam folder, just in case).';
+              lead(); sig('DxFallbackSuccess');
+            } else {
+              throw new Error('ml');
+            }
+          })
+          .catch(function(){
+            btn.disabled = false; btn.textContent = 'Send me the guide';
+            msg.className = 'sv-fb-msg err';
+            msg.innerHTML = 'That didn\'t go through on this phone. Get the guide by <a href="' + WA + '" target="_blank" rel="noopener">WhatsApp</a> or <a href="' + MAIL + '">email</a> instead and I\'ll send it myself.';
+            sig('DxFallbackError');
+          });
+      });
+      // Fuera del div de MailerLite, justo después: no interfiere con los scripts del pixel.
+      box.parentNode.insertBefore(w, box.nextSibling);
+    }
+
+    function check(){
+      var boxes = document.querySelectorAll('.ml-embedded');
+      for (var i = 0; i < boxes.length; i++) {
+        var b = boxes[i], hasML = !!b.querySelector('form'),
+            nx = b.nextElementSibling, fb = (nx && nx.className === 'sv-fb') ? nx : null;
+        if (hasML && fb) { fb.parentNode.removeChild(fb); }
+        else if (!hasML && !fb) { build(b); if (i === 0) sig('DxFallbackShown'); }
+      }
+    }
+    // Primera comprobación a los 4 s; si MailerLite aparece después, el respaldo se retira.
+    setTimeout(check, 4000);
+    setTimeout(check, 9000);
+    setTimeout(check, 20000);
+  } catch(e){}
+})();
+</script>
+<!-- /SV-FALLBACK-FORM -->
+
 </body>
 </html>
